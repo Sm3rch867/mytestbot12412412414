@@ -195,8 +195,23 @@ async def process_post(message: types.Message, state: FSMContext):
         
     await state.clear()
 
+from aiohttp import web
+
+async def handle(request):
+    return web.Response(text="Bot is running!")
+
 async def main():
     init_db()
+    
+    # Запускаем микро-веб-сервер для Render, чтобы он не ругался на закрытый порт
+    app = web.Application()
+    app.router.add_get("/", handle)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    port = int(os.environ.get("PORT", 10000))
+    site = web.TCPSite(runner, "0.0.0.0", port)
+    await site.start()
+    
     print("Бот запущен!")
     await dp.start_polling(bot)
 
